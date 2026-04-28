@@ -2,36 +2,27 @@ import torch
 import torchvision.models as models
 import time
 
-device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+device = torch.device("cuda")
 
-model = models.mobilenet_v2(pretrained=True)
+model = models.mobilenet_v2(pretrained=True).to(device)
 model.eval()
 
-# 🔴 split at layer 7 (based on your data)
+# split at layer 7
 part1 = torch.nn.Sequential(*model.features[:7]).to(device)
 part2 = torch.nn.Sequential(*model.features[7:]).to(device)
 
 x = torch.randn(1, 3, 224, 224).to(device)
 
+# warmup
+for _ in range(10):
+    _ = part2(part1(x))
+
 start = time.time()
 
-# GPU part
-x = part1(x)
-
-# simulate transfer
-tensor_size = x.element_size() * x.nelement() / (1024 * 1024)
-bandwidth = 100  # MB/s
-
-delay = tensor_size / bandwidth
-# time.sleep(delay)
-
-# x = x.cpu()
-
-# CPU part (mock FPGA)
-x = part2(x)
+for _ in range(50):
+    out = part1(x)
+    out = part2(out)
 
 end = time.time()
 
-print("Tensor size:", tensor_size, "MB")
-print("Simulated delay:", delay, "sec")
-print("Total execution time:", (end - start) * 1000, "ms")
+print("Split GPU→GPU time:", (end - start)/50 * 1000, "ms")
