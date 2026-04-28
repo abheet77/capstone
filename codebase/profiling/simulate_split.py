@@ -9,7 +9,7 @@ model.eval()
 
 # 🔴 split at layer 7 (based on your data)
 part1 = torch.nn.Sequential(*model.features[:7]).to(device)
-part2 = torch.nn.Sequential(*model.features[7:]).to("cpu")
+part2 = torch.nn.Sequential(*model.features[7:]).to(device)
 
 x = torch.randn(1, 3, 224, 224).to(device)
 
@@ -23,9 +23,9 @@ tensor_size = x.element_size() * x.nelement() / (1024 * 1024)
 bandwidth = 100  # MB/s
 
 delay = tensor_size / bandwidth
-time.sleep(delay)
+# time.sleep(delay)
 
-x = x.cpu()
+# x = x.cpu()
 
 # CPU part (mock FPGA)
 x = part2(x)
