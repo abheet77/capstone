@@ -1,6 +1,23 @@
 import torch
 import torchvision.models as models
-import time
+
+# ---- timing function (YOU MISSED THIS) ----
+def time_model(fn, iters=100, warmup=20):
+    for _ in range(warmup):
+        fn()
+    torch.cuda.synchronize()
+
+    starter = torch.cuda.Event(enable_timing=True)
+    ender = torch.cuda.Event(enable_timing=True)
+
+    starter.record()
+    for _ in range(iters):
+        fn()
+    ender.record()
+
+    torch.cuda.synchronize()
+    return starter.elapsed_time(ender) / iters
+# ------------------------------------------
 
 device = torch.device("cuda")
 
@@ -9,18 +26,9 @@ model.eval()
 
 x = torch.randn(1, 3, 224, 224).to(device)
 
-# warmup
-for _ in range(10):
+def run():
     _ = model(x)
 
-torch.cuda.synchronize()
-start = time.time()
+ms = time_model(run, iters=100, warmup=20)
 
-for _ in range(50):
-    _ = model(x)
-
-torch.cuda.synchronize()
-end = time.time()
-
-print("Device:", device)
-print("Avg inference time:", (end - start)/50 * 1000, "ms")
+print("Baseline (full GPU):", ms, "ms")

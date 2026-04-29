@@ -1,0 +1,7 @@
+                        for collab
+    splitting time 
+Split GPU→GPU time: 8.777832984924316 ms
+  gpu baseline
+Device: cuda
+Avg inference time: 8.50 ms
+                        for lab
